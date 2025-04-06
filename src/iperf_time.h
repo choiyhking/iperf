@@ -32,6 +32,8 @@
 struct iperf_time {
     uint32_t secs;
     uint32_t usecs;
+    uint32_t wall_secs;
+    uint32_t wall_usecs;
 };
 
 int iperf_time_now(struct iperf_time *time1);

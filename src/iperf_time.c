@@ -38,14 +38,17 @@
 int
 iperf_time_now(struct iperf_time *time1)
 {
-    struct timespec ts;
-    int result;
-    result = clock_gettime(CLOCK_MONOTONIC, &ts);
-    if (result == 0) {
-        time1->secs = (uint32_t) ts.tv_sec;
-        time1->usecs = (uint32_t) ts.tv_nsec / 1000;
+    struct timespec mono, real;
+    int result1 = clock_gettime(CLOCK_MONOTONIC, &mono);
+    int result2 = clock_gettime(CLOCK_REALTIME, &real);
+    if (result1 == 0 && result2 == 0) {
+        time1->secs = (uint32_t) mono.tv_sec;
+        time1->usecs = (uint32_t) mono.tv_nsec / 1000;
+        time1->wall_secs = (uint32_t) real.tv_sec;
+        time1->wall_usecs = (uint32_t) real.tv_nsec / 1000;
+	return 0;
     }
-    return result;
+    return -1;
 }
 
 #else

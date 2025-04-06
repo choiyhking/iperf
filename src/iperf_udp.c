@@ -54,7 +54,7 @@
 int
 iperf_udp_recv(struct iperf_stream *sp)
 {
-    uint32_t  sec, usec;
+    uint32_t  sec, usec, sec_real, usec_real;
     uint64_t  pcount;
     int       r;
     int       size = sp->settings->blksize;
@@ -103,11 +103,17 @@ iperf_udp_recv(struct iperf_stream *sp)
 	    memcpy(&sec, sp->buffer, sizeof(sec));
 	    memcpy(&usec, sp->buffer+4, sizeof(usec));
 	    memcpy(&pc, sp->buffer+8, sizeof(pc));
+	    memcpy(&sec_real, sp->buffer+12, sizeof(sec_real));
+	    memcpy(&usec_real, sp->buffer+16, sizeof(usec_real));
 	    sec = ntohl(sec);
 	    usec = ntohl(usec);
 	    pcount = ntohl(pc);
+	    sec_real = ntohl(sec_real);
+	    usec_real = ntohl(usec_real);
 	    sent_time.secs = sec;
+	    sent_time.wall_secs = sec_real;
 	    sent_time.usecs = usec;
+	    sent_time.wall_usecs = usec_real;
 	}
 
 	if (test->debug_level >= DEBUG_LEVEL_DEBUG)
@@ -170,6 +176,18 @@ iperf_udp_recv(struct iperf_stream *sp)
 	 * computation does not require knowing the round-trip
 	 * time.
 	 */
+
+	/////////////////////////////
+	struct timespec ts_recv;
+	clock_gettime(CLOCK_REALTIME, &ts_recv);
+
+	double custom_sent_time = sec_real + usec_real / 1e6;
+	double custom_recv_time = ts_recv.tv_sec + ts_recv.tv_nsec / 1e9;
+	double owd = custom_recv_time - custom_sent_time;
+	fprintf(stderr, "[OWD] %.3f ms\n", owd * 1000);
+
+	/////////////////////////////
+
 	iperf_time_now(&arrival_time);
 
 	iperf_time_diff(&arrival_time, &sent_time, &temp_time);
@@ -225,16 +243,20 @@ iperf_udp_send(struct iperf_stream *sp)
     }
     else {
 
-	uint32_t  sec, usec, pcount;
+	uint32_t  sec, usec, sec_real, usec_real, pcount;
+	
 
 	sec = htonl(before.secs);
 	usec = htonl(before.usecs);
 	pcount = htonl(sp->packet_count);
+	sec_real = htonl(before.wall_secs);
+	usec_real = htonl(before.wall_usecs);
 
 	memcpy(sp->buffer, &sec, sizeof(sec));
 	memcpy(sp->buffer+4, &usec, sizeof(usec));
 	memcpy(sp->buffer+8, &pcount, sizeof(pcount));
-
+	memcpy(sp->buffer+12, &sec_real, sizeof(sec_real));    
+	memcpy(sp->buffer+16, &usec_real, sizeof(usec_real)); 
     }
 
     r = Nwrite(sp->socket, sp->buffer, size, Pudp);
