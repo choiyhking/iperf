@@ -230,7 +230,7 @@ iperf_udp_send(struct iperf_stream *sp)
 
     iperf_time_now(&before);
     
-    printf("[SEND] wall=%u.%06u\n", before.wall_secs, before.wall_usecs);
+    fprintf(stderr, "[SEND] wall=%u.%06u\n", before.wall_secs, before.wall_usecs);
     
     ++sp->packet_count;
 
