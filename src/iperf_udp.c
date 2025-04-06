@@ -185,6 +185,10 @@ iperf_udp_recv(struct iperf_stream *sp)
 	double owd_sent_time = sent_time.wall_secs + sent_time.wall_usecs / 1e6;
 	double owd_recv_time = ts_recv.tv_sec + ts_recv.tv_nsec / 1e9;
 	double owd = owd_recv_time - owd_sent_time;
+	
+	printf("owd_sent_time: %.6f\n", owd_sent_time);
+	printf("owd_recv_time: %.6f\n", owd_recv_time);
+	    
 	fprintf(stderr, "[OWD] %.3f ms\n", owd * 1000);
 
 	/////////////////////////////
